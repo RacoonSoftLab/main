@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RaccoonSoftLab — AI Agents for Latin America</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0c0b;
+    --bg2: #141413;
+    --bg3: #1c1c1a;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --text: #e8e6e0;
+    --text-muted: #7a7870;
+    --text-dim: #4a4845;
+    --accent: #8b7ff5;
+    --accent-dim: rgba(139,127,245,0.12);
+    --accent-border: rgba(139,127,245,0.3);
+    --green: #4ecb8a;
+    --green-dim: rgba(78,203,138,0.1);
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* LAYOUT */
+  .container { max-width: 960px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 1; }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: rgba(12,12,11,0.85);
+  }
+  .nav-inner {
+    max-width: 960px; margin: 0 auto; padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px;
+  }
+  .nav-logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .nav-logo .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
+  .nav-links { display: flex; align-items: center; gap: 2rem; }
+  .nav-links a {
+    font-size: 13px; color: var(--text-muted); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .lang-btn {
+    font-family: var(--mono); font-size: 11px; font-weight: 500;
+    color: var(--text-muted); background: transparent;
+    border: 1px solid var(--border); border-radius: 4px;
+    padding: 4px 10px; cursor: pointer; transition: all 0.2s;
+  }
+  .lang-btn:hover { border-color: var(--border-hover); color: var(--text); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 7rem 0 4rem;
+  }
+  .hero-tag {
+    font-family: var(--mono); font-size: 11px; font-weight: 400;
+    color: var(--accent); letter-spacing: 0.1em;
+    text-transform: uppercase; margin-bottom: 2rem;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hero-tag::before { content: '//'; color: var(--text-dim); }
+  .hero h1 {
+    font-size: clamp(2.2rem, 5vw, 3.8rem);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero-sub {
+    font-size: 1.05rem; font-weight: 300;
+    color: var(--text-muted); max-width: 520px;
+    margin-bottom: 3rem; line-height: 1.8;
+  }
+  .hero-cta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    font-family: var(--mono); font-size: 13px; font-weight: 500;
+    background: var(--accent); color: #0c0c0b;
+    border: none; border-radius: 6px;
+    padding: 12px 24px; cursor: pointer; text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-ghost {
+    font-family: var(--mono); font-size: 13px; font-weight: 400;
+    background: transparent; color: var(--text-muted);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px 24px; cursor: pointer; text-decoration: none;
+    transition: all 0.2s; display: inline-block;
+  }
+  .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
+
+  /* HERO STATS */
+  .hero-stats {
+    display: flex; gap: 2.5rem; margin-top: 5rem;
+    padding-top: 2.5rem; border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .stat-item {}
+  .stat-num {
+    font-family: var(--mono); font-size: 1.6rem; font-weight: 500;
+    color: var(--text); line-height: 1;
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* SECTIONS */
+  section { padding: 6rem 0; border-top: 1px solid var(--border); }
+  .section-tag {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    letter-spacing: 0.1em; text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: 300;
+    letter-spacing: -0.02em; color: var(--text);
+    margin-bottom: 1rem; line-height: 1.2;
+  }
+  .section-sub { font-size: 0.95rem; color: var(--text-muted); max-width: 480px; line-height: 1.8; }
+
+  /* SERVICES */
+  .services-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; margin-top: 3rem;
+  }
+  .service-card {
+    background: var(--bg2); padding: 1.75rem;
+    transition: background 0.2s;
+  }
+  .service-card:hover { background: var(--bg3); }
+  .service-num {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    margin-bottom: 1rem;
+  }
+  .service-card h3 {
+    font-size: 15px; font-weight: 500; color: var(--text);
+    margin-bottom: 0.6rem; line-height: 1.3;
+  }
+  .service-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* DIFFERENTIATORS */
+  .diff-list { margin-top: 3rem; }
+  .diff-item {
+    display: flex; gap: 1.5rem; padding: 1.5rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .diff-item:first-child { border-top: 1px solid var(--border); }
+  .diff-index {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    min-width: 32px; margin-top: 3px;
+  }
+  .diff-content h4 { font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .diff-content p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px; margin-top: 3rem;
+  }
+  .price-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.75rem;
+    transition: border-color 0.2s;
+  }
+  .price-card:hover { border-color: var(--border-hover); }
+  .price-card.highlight { border-color: var(--accent-border); background: var(--accent-dim); }
+  .price-tag-label {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+    margin-bottom: 1rem; display: flex; justify-content: space-between;
+    align-items: center;
+  }
+  .price-tag-label .featured-badge {
+    background: var(--accent-dim); color: var(--accent);
+    border: 1px solid var(--accent-border);
+    font-size: 10px; padding: 2px 8px; border-radius: 3px;
+  }
+  .price-card h3 { font-size: 16px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .price-amount {
+    font-family: var(--mono); font-size: 1.4rem; font-weight: 500;
+    color: var(--text); margin: 0.75rem 0 0.25rem;
+  }
+  .price-period { font-size: 12px; color: var(--text-muted); margin-bottom: 1.25rem; }
+  .price-features { list-style: none; }
+  .price-features li {
+    font-size: 13px; color: var(--text-muted); padding: 5px 0;
+    padding-left: 16px; position: relative; border-top: 1px solid var(--border);
+  }
+  .price-features li::before {
+    content: '→'; position: absolute; left: 0;
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim);
+  }
+
+  /* DOMAINS */
+  .domains-row {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 2rem;
+  }
+  .domain-pill {
+    font-family: var(--mono); font-size: 12px; font-weight: 400;
+    padding: 8px 16px; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--text-muted);
+    background: var(--bg2);
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .domain-pill:hover { border-color: var(--accent-border); color: var(--text); }
+  .domain-pill .pill-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+  /* CONTACT */
+  .contact-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 16px; padding: 3rem;
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 2rem; flex-wrap: wrap;
+    margin-top: 3rem;
+  }
+  .contact-card h3 { font-size: 1.5rem; font-weight: 300; color: var(--text); margin-bottom: 0.5rem; }
+  .contact-card p { font-size: 14px; color: var(--text-muted); max-width: 360px; line-height: 1.7; }
+  .contact-email {
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    text-decoration: none; display: block; margin-top: 1rem;
+  }
+  .contact-email:hover { text-decoration: underline; }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2rem 0;
+  }
+  .footer-inner {
+    max-width: 960px; margin: 0 auto; padding: 0 2rem;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-left { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .footer-right { font-size: 12px; color: var(--text-dim); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .hero-tag { animation: fadeUp 0.6s ease both; }
+  .hero h1 { animation: fadeUp 0.6s 0.1s ease both; }
+  .hero-sub { animation: fadeUp 0.6s 0.2s ease both; }
+  .hero-cta { animation: fadeUp 0.6s 0.3s ease both; }
+  .hero-stats { animation: fadeUp 0.6s 0.4s ease both; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .nav-links { display: none; }
+    .contact-card { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-logo">
+      <span class="dot"></span>
+      RaccoonSoftLab
+    </a>
+    <div class="nav-links">
+      <a href="#services" data-es="Servicios" data-en="Services">Servicios</a>
+      <a href="#why" data-es="Por qué nosotros" data-en="Why us">Por qué nosotros</a>
+      <a href="#pricing" data-es="Precios" data-en="Pricing">Precios</a>
+      <a href="#contact" data-es="Contacto" data-en="Contact">Contacto</a>
+      <button class="lang-btn" onclick="toggleLang()">EN</button>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <div class="hero">
+      <div class="hero-tag" data-es="Consultora de agentes IA · Latinoamérica" data-en="AI Agent Consultancy · Latin America">Consultora de agentes IA · Latinoamérica</div>
+      <h1 data-es="Agentes inteligentes<br>para organizaciones<br>que quieren <em>escalar</em>." data-en="Intelligent agents<br>for organizations<br>that want to <em>scale</em>.">
+        Agentes inteligentes<br>para organizaciones<br>que quieren <em>escalar</em>.
+      </h1>
+      <p class="hero-sub" data-es="Diseñamos e implementamos sistemas de inteligencia artificial que automatizan procesos complejos y mejoran la toma de decisiones. Con base técnica real, no solo integraciones." data-en="We design and implement AI systems that automate complex processes and improve decision-making. With real technical depth, not just integrations.">
+        Diseñamos e implementamos sistemas de inteligencia artificial que automatizan procesos complejos y mejoran la toma de decisiones. Con base técnica real, no solo integraciones.
+      </p>
+      <div class="hero-cta">
+        <a href="#contact" class="btn-primary" data-es="Hablemos de tu proyecto" data-en="Let's talk about your project">Hablemos de tu proyecto</a>
+        <a href="#services" class="btn-ghost" data-es="Ver servicios" data-en="See services">Ver servicios</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">4</div>
+          <div class="stat-label" data-es="dominios validados" data-en="validated domains">dominios validados</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">LSTM·SAC</div>
+          <div class="stat-label" data-es="arquitectura propia" data-en="proprietary architecture">arquitectura propia</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">LATAM</div>
+          <div class="stat-label" data-es="enfoque regional" data-en="regional focus">enfoque regional</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="container">
+      <div class="section-tag" data-es="// servicios" data-en="// services">// servicios</div>
+      <h2 class="section-title" data-es="Lo que construimos" data-en="What we build">Lo que construimos</h2>
+      <p class="section-sub" data-es="Desde la estrategia hasta el agente en producción. Cada solución está diseñada para el contexto real del cliente." data-en="From strategy to the agent in production. Each solution is designed for the client's real context.">Desde la estrategia hasta el agente en producción. Cada solución está diseñada para el contexto real del cliente.</p>
+      <div class="services-grid">
+        <div class="service-card">
+          <div class="service-num">01</div>
+          <h3 data-es="Agentes conversacionales" data-en="Conversational agents">Agentes conversacionales</h3>
+          <p data-es="Chatbots y asistentes IA integrados a los procesos reales del negocio, no plantillas genéricas." data-en="Chatbots and AI assistants integrated into real business processes, not generic templates.">Chatbots y asistentes IA integrados a los procesos reales del negocio, no plantillas genéricas.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-num">02</div>
+          <h3 data-es="Automatización con agentes" data-en="Agent automation">Automatización con agentes</h3>
+          <p data-es="Flujos de trabajo autónomos que reducen carga operativa, errores humanos y tiempos de respuesta." data-en="Autonomous workflows that reduce operational load, human errors, and response times.">Flujos de trabajo autónomos que reducen carga operativa, errores humanos y tiempos de respuesta.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-num">03</div>
+          <h3 data-es="Consultoría estratégica" data-en="Strategic consulting">Consultoría estratégica</h3>
+          <p data-es="Diagnóstico, hoja de ruta y selección de tecnología para adoptar IA con criterio y sin desperdiciar recursos." data-en="Diagnosis, roadmap and technology selection to adopt AI with criteria and without wasting resources.">Diagnóstico, hoja de ruta y selección de tecnología para adoptar IA con criterio y sin desperdiciar recursos.</p>
+        </div>
+        <div class="service-card">
+          <div class="service-num">04</div>
+          <h3 data-es="Sistemas de optimización" data-en="Optimization systems">Sistemas de optimización</h3>
+          <p data-es="Decisiones adaptativas para gestión de recursos, demanda estocástica y operaciones complejas." data-en="Adaptive decisions for resource management, stochastic demand, and complex operations.">Decisiones adaptativas para gestión de recursos, demanda estocástica y operaciones complejas.</p>
+        </div>
+      </div>
+
+      <div class="domains-row" style="margin-top: 2.5rem;">
+        <span style="font-size: 12px; color: var(--text-dim); font-family: var(--mono); margin-right: 4px; line-height: 2.2;" data-es="dominios:" data-en="domains:">dominios:</span>
+        <div class="domain-pill"><span class="pill-dot"></span><span data-es="Salud" data-en="Healthcare">Salud</span></div>
+        <div class="domain-pill"><span class="pill-dot"></span><span data-es="Educación" data-en="Education">Educación</span></div>
+        <div class="domain-pill"><span class="pill-dot"></span><span data-es="Banca & fintech" data-en="Banking & fintech">Banca & fintech</span></div>
+        <div class="domain-pill"><span class="pill-dot"></span><span data-es="Call center" data-en="Call center">Call center</span></div>
+        <div class="domain-pill"><span class="pill-dot"></span><span data-es="Retail" data-en="Retail">Retail</span></div>
+        <div class="domain-pill"><span class="pill-dot"></span><span data-es="Instituciones públicas" data-en="Public institutions">Instituciones públicas</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section id="why">
+    <div class="container">
+      <div class="section-tag" data-es="// diferenciador" data-en="// differentiator">// diferenciador</div>
+      <h2 class="section-title" data-es="Por qué RaccoonSoftLab" data-en="Why RaccoonSoftLab">Por qué RaccoonSoftLab</h2>
+      <p class="section-sub" data-es="No somos integradores de APIs. Tenemos investigación propia y experiencia técnica profunda en sistemas multi-agente." data-en="We are not API integrators. We have proprietary research and deep technical expertise in multi-agent systems.">No somos integradores de APIs. Tenemos investigación propia y experiencia técnica profunda en sistemas multi-agente.</p>
+      <div class="diff-list">
+        <div class="diff-item">
+          <div class="diff-index">01</div>
+          <div class="diff-content">
+            <h4 data-es="Investigación propia en sistemas multi-agente" data-en="Proprietary multi-agent systems research">Investigación propia en sistemas multi-agente</h4>
+            <p data-es="Desarrollamos MARA, una arquitectura LSTM-SAC con trunk compartido y transferencia cross-dominio. No aplicamos recetas genéricas." data-en="We developed MARA, an LSTM-SAC architecture with shared trunk and cross-domain transfer. We don't apply generic recipes.">Desarrollamos MARA, una arquitectura LSTM-SAC con trunk compartido y transferencia cross-dominio. No aplicamos recetas genéricas.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-index">02</div>
+          <div class="diff-content">
+            <h4 data-es="Validación en dominios críticos" data-en="Validation in critical domains">Validación en dominios críticos</h4>
+            <p data-es="Sistemas probados en entornos de alta complejidad: salud, educación, banca y call center. Sabemos dónde fallan los modelos estándar." data-en="Systems tested in high-complexity environments: healthcare, education, banking, and call center. We know where standard models fail.">Sistemas probados en entornos de alta complejidad: salud, educación, banca y call center. Sabemos dónde fallan los modelos estándar.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-index">03</div>
+          <div class="diff-content">
+            <h4 data-es="Enfoque LATAM real" data-en="Real LATAM focus">Enfoque LATAM real</h4>
+            <p data-es="Entendemos las restricciones de la región: presupuesto ajustado, infraestructura limitada, talento escaso. Nuestras soluciones están diseñadas para ese contexto." data-en="We understand the region's constraints: tight budget, limited infrastructure, scarce talent. Our solutions are designed for that context.">Entendemos las restricciones de la región: presupuesto ajustado, infraestructura limitada, talento escaso. Nuestras soluciones están diseñadas para ese contexto.</p>
+          </div>
+        </div>
+        <div class="diff-item">
+          <div class="diff-index">04</div>
+          <div class="diff-content">
+            <h4 data-es="Del diagnóstico a producción" data-en="From diagnosis to production">Del diagnóstico a producción</h4>
+            <p data-es="Acompañamos todo el ciclo: estrategia, diseño, implementación y soporte. Sin intermediarios, sin subcontratos ocultos." data-en="We accompany the full cycle: strategy, design, implementation, and support. No intermediaries, no hidden subcontracts.">Acompañamos todo el ciclo: estrategia, diseño, implementación y soporte. Sin intermediarios, sin subcontratos ocultos.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="container">
+      <div class="section-tag" data-es="// precios" data-en="// pricing">// precios</div>
+      <h2 class="section-title" data-es="Transparencia desde el inicio" data-en="Transparency from the start">Transparencia desde el inicio</h2>
+      <p class="section-sub" data-es="Sin sorpresas. Tres estructuras claras según el alcance del proyecto." data-en="No surprises. Three clear structures based on project scope.">Sin sorpresas. Tres estructuras claras según el alcance del proyecto.</p>
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div class="price-tag-label">01</div>
+          <h3 data-es="Diagnóstico IA" data-en="AI Diagnosis">Diagnóstico IA</h3>
+          <div class="price-amount">$500 – $1,200</div>
+          <div class="price-period" data-es="USD · entrega única" data-en="USD · one-time delivery">USD · entrega única</div>
+          <ul class="price-features">
+            <li data-es="Auditoría de procesos automatizables" data-en="Automatable process audit">Auditoría de procesos automatizables</li>
+            <li data-es="Hoja de ruta de adopción IA" data-en="AI adoption roadmap">Hoja de ruta de adopción IA</li>
+            <li data-es="Selección de tecnología" data-en="Technology selection">Selección de tecnología</li>
+            <li data-es="Informe ejecutivo + técnico" data-en="Executive + technical report">Informe ejecutivo + técnico</li>
+          </ul>
+        </div>
+        <div class="price-card highlight">
+          <div class="price-tag-label">02 <span class="featured-badge" data-es="Más solicitado" data-en="Most popular">Más solicitado</span></div>
+          <h3 data-es="Agente MVP" data-en="MVP Agent">Agente MVP</h3>
+          <div class="price-amount">$2,000 – $5,000</div>
+          <div class="price-period" data-es="USD · 4 – 8 semanas" data-en="USD · 4 – 8 weeks">USD · 4 – 8 semanas</div>
+          <ul class="price-features">
+            <li data-es="Diseño e implementación de un agente" data-en="Agent design and implementation">Diseño e implementación de un agente</li>
+            <li data-es="Integración con sistemas existentes" data-en="Integration with existing systems">Integración con sistemas existentes</li>
+            <li data-es="Pruebas y ajuste en producción" data-en="Testing and production tuning">Pruebas y ajuste en producción</li>
+            <li data-es="Documentación y transferencia" data-en="Documentation and handoff">Documentación y transferencia</li>
+          </ul>
+        </div>
+        <div class="price-card">
+          <div class="price-tag-label">03</div>
+          <h3 data-es="Sistema completo" data-en="Full system">Sistema completo</h3>
+          <div class="price-amount">$8,000 – $20,000</div>
+          <div class="price-period" data-es="USD · 2 – 4 meses" data-en="USD · 2 – 4 months">USD · 2 – 4 meses</div>
+          <ul class="price-features">
+            <li data-es="Arquitectura multi-agente a medida" data-en="Custom multi-agent architecture">Arquitectura multi-agente a medida</li>
+            <li data-es="Múltiples flujos automatizados" data-en="Multiple automated workflows">Múltiples flujos automatizados</li>
+            <li data-es="Dashboard de monitoreo" data-en="Monitoring dashboard">Dashboard de monitoreo</li>
+            <li data-es="Soporte post-lanzamiento incluido" data-en="Post-launch support included">Soporte post-lanzamiento incluido</li>
+          </ul>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--text-dim); margin-top: 1.5rem; font-family: var(--mono);" data-es="* También disponible: retainer mensual ($500–$1,500 USD) · consultoría por horas ($40–$80 USD) · piloto institucional (negociable)" data-en="* Also available: monthly retainer ($500–$1,500 USD) · hourly consulting ($40–$80 USD) · institutional pilot (negotiable)">* También disponible: retainer mensual ($500–$1,500 USD) · consultoría por horas ($40–$80 USD) · piloto institucional (negociable)</p>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="container">
+      <div class="section-tag" data-es="// contacto" data-en="// contact">// contacto</div>
+      <h2 class="section-title" data-es="¿Tienes un proyecto en mente?" data-en="Have a project in mind?">¿Tienes un proyecto en mente?</h2>
+      <div class="contact-card">
+        <div>
+          <h3 data-es="Hablemos." data-en="Let's talk.">Hablemos.</h3>
+          <p data-es="Cuéntanos el problema que quieres resolver. En 48 horas te respondemos con una evaluación inicial sin costo." data-en="Tell us the problem you want to solve. Within 48 hours we'll respond with a free initial assessment.">Cuéntanos el problema que quieres resolver. En 48 horas te respondemos con una evaluación inicial sin costo.</p>
+          <a href="mailto:leo92esquivel@gmail.com" class="contact-email">leo92esquivel@gmail.com →</a>
+        </div>
+        <a href="mailto:leo92esquivel@gmail.com" class="btn-primary" data-es="Enviar mensaje" data-en="Send message">Enviar mensaje</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-left">© 2025 RaccoonSoftLab · Leonardo Esquivel</div>
+    <div class="footer-right" data-es="Camagüey, Cuba · LATAM" data-en="Camagüey, Cuba · LATAM">Camagüey, Cuba · LATAM</div>
+  </div>
+</footer>
+
+<script>
+  let lang = 'es';
+  function toggleLang() {
+    lang = lang === 'es' ? 'en' : 'es';
+    document.querySelector('.lang-btn').textContent = lang === 'es' ? 'EN' : 'ES';
+    document.querySelectorAll('[data-es]').forEach(el => {
+      const val = el.getAttribute('data-' + lang);
+      if (el.tagName === 'H1' || el.tagName === 'H2') {
+        el.innerHTML = val;
+      } else {
+        el.textContent = val;
+      }
+    });
+  }
+
+  // Smooth scroll offset for fixed nav
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        window.scrollTo({ top: target.offsetTop - 70, behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+</body>
+</html>
